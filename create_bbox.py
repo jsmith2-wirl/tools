@@ -4,15 +4,6 @@ import geopandas as gpd
 from typing import Union     
 from shapely.geometry import box
 
-gpd.io.file.fiona.drvsupport.supported_drivers['LIBKML'] = 'rw'
-
-import os
-import geopandas as gpd
-from typing import Union     
-from shapely.geometry import box
-
-gpd.io.file.fiona.drvsupport.supported_drivers['LIBKML'] = 'rw'
-
 def create_bbox_kml(file_path:Union[str,os.PathLike], 
                     buffer_dist:float=0, 
                     type:str='kml', 
@@ -32,7 +23,12 @@ def create_bbox_kml(file_path:Union[str,os.PathLike],
     out_crs = 'EPSG:' + str(out_crs)
     print(out_crs)
     if type == 'kml':
-        file = gpd.read_file(file_path, driver='LIBKML')
+        try:
+            file = gpd.read_file(file_path, driver='LIBKML')
+        except:
+            gpd.io.file.fiona.drvsupport.supported_drivers['LIBKML'] = 'rw'
+            file = gpd.read_file(file_path, driver='LIBKML')
+
     elif type == 'geojson' or type == 'shapefile':
         file = gpd.read_file(file_path)
 
