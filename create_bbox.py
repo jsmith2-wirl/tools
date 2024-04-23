@@ -6,7 +6,7 @@ from shapely.geometry import box
 
 def create_bbox_kml(file_path:Union[str,os.PathLike], 
                     buffer_dist:float=0, 
-                    type:str='kml',
+                    file_type:str='kml',
                     out_type:str='kml', 
                     out_crs:int=4326):
     '''Create a bounding box from a kml file.
@@ -20,17 +20,17 @@ def create_bbox_kml(file_path:Union[str,os.PathLike],
     returns:
         nothing, saves the file to the same directory as the input file.
     '''
+    file_path = os.path.abspath(file_path)
 
     out_crs = 'EPSG:' + str(out_crs)
-    print(out_crs)
-    if type == 'kml':
+    if file_type == 'kml':
         try:
             file = gpd.read_file(file_path, driver='LIBKML')
         except:
             gpd.io.file.fiona.drvsupport.supported_drivers['LIBKML'] = 'rw'
             file = gpd.read_file(file_path, driver='LIBKML')
 
-    elif type == 'geojson' or type == 'shapefile':
+    elif file_type == 'geojson' or file_type == 'shapefile':
         file = gpd.read_file(file_path)
 
     if out_crs[5:] != file.crs.to_epsg():
@@ -41,10 +41,9 @@ def create_bbox_kml(file_path:Union[str,os.PathLike],
     bbox_gdf = gpd.GeoDataFrame(gpd.GeoSeries(bbox), columns=['geometry'])
 
     if out_type == 'shapefile':
-        if not os.path.exists(os.path.join(os.path.dirname(file_path) + '/shp')):
-            os.mkdir(os.path.join(os.path.dirname(file_path) + '/shp'))
-        outpath = os.path.join(os.path.dirname(file_path) + '/shp', os.path.basename(file_path).split('.')[0])
-        print(outpath)
+        if not os.path.exists(os.path.join(os.path.dirname(file_path) + 'shp')):
+            os.mkdir(os.path.join(os.path.dirname(file_path) + 'shp'))
+        outpath = os.path.join(os.path.dirname(file_path) + 'shp', os.path.basename(file_path).split('.')[0])
     else:
         outpath = os.path.join(os.path.dirname(file_path), os.path.basename(file_path).split('.')[0])
 
