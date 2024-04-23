@@ -6,6 +6,13 @@ from shapely.geometry import box
 
 gpd.io.file.fiona.drvsupport.supported_drivers['LIBKML'] = 'rw'
 
+import os
+import geopandas as gpd
+from typing import Union     
+from shapely.geometry import box
+
+gpd.io.file.fiona.drvsupport.supported_drivers['LIBKML'] = 'rw'
+
 def create_bbox_kml(file_path:Union[str,os.PathLike], 
                     buffer_dist:float=0, 
                     type:str='kml', 
@@ -59,18 +66,17 @@ def zip_shapefiles(file_path:Union[str,os.PathLike]):
     output:
         zipped shapefile
     '''
-    path = os.path.join(os.path.dirname(file_path), 'shp')
+    path = os.path.join(os.path.dirname(file_path))
+    fname = os.path.basename(file_path).split('.')[0]
 
     ext = ('.shp', '.dbf', '.prj', '.shx', '.cpg')
     
-    shp_list = [] 
-    for path, dirc, files in os.walk(path):
-        for name in files:
-            if name.endswith(ext):
-                shp_list.append(name)
+    shp_list = []
+    with zipfile.ZipFile(f'{fname}_bbox.zip', 'w') as zipMe:   
+        for path, dirc, files in os.walk(path):
+            for name in files:
+                if name.endswith(ext):
+                    shp_list.append(name)
+                    zipMe.write(os.path.join(path, name), compress_type=zipfile.ZIP_DEFLATED)
 
-    with zipfile.ZipFile(shp_list[0][:-4] + '.zip', 'w') as zipMe:        
-        for file in shp_list:
-            zipMe.write(file, compress_type=zipfile.ZIP_DEFLATED)
-    zipMe.close()
     
