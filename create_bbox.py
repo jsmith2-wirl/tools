@@ -6,7 +6,8 @@ from shapely.geometry import box
 
 def create_bbox_kml(file_path:Union[str,os.PathLike], 
                     buffer_dist:float=0, 
-                    type:str='kml', 
+                    type:str='kml',
+                    out_type:str='kml', 
                     out_crs:int=4326):
     '''Create a bounding box from a kml file.
 
@@ -39,19 +40,23 @@ def create_bbox_kml(file_path:Union[str,os.PathLike],
     bbox = box(*bounds).buffer(buffer_dist)    
     bbox_gdf = gpd.GeoDataFrame(gpd.GeoSeries(bbox), columns=['geometry'])
 
-    if type == 'shapefile':
-        if not os.path.exists(os.path.join(os.path.dirname(file_path) + 'shp')):
-            os.mkdir(os.path.join(os.path.dirname(file_path) + 'shp'))
-        outpath = os.path.join(os.path.dirname(file_path) + 'shp', os.path.basename(file_path).split('.')[0])
+    if out_type == 'shapefile':
+        if not os.path.exists(os.path.join(os.path.dirname(file_path) + '/shp')):
+            os.mkdir(os.path.join(os.path.dirname(file_path) + '/shp'))
+        outpath = os.path.join(os.path.dirname(file_path) + '/shp', os.path.basename(file_path).split('.')[0])
         print(outpath)
     else:
         outpath = os.path.join(os.path.dirname(file_path), os.path.basename(file_path).split('.')[0])
 
-    if type == 'kml':
-        bbox_gdf.to_file(outpath + '_bbox.kml', driver='LIBKML', crs=out_crs)
-    if type == 'shapefile':
+    if out_type == 'kml':
+        try:
+            bbox_gdf.to_file(outpath + '_bbox.kml', driver='LIBKML', crs=out_crs)
+        except:
+            gpd.io.file.fiona.drvsupport.supported_drivers['LIBKML'] = 'rw'
+            bbox_gdf.to_file(outpath + '_bbox.kml', driver='LIBKML', crs=out_crs)
+    if out_type == 'shapefile':
         bbox_gdf.to_file(outpath + '_bbox.shp', driver='ESRI Shapefile', crs=out_crs)
-    elif type == 'geojson':
+    elif out_type == 'geojson':
         bbox_gdf.to_file(outpath + '_bbox.geojson', driver='GeoJSON', crs=out_crs) 
 
 def zip_shapefiles(file_path:Union[str,os.PathLike]):
