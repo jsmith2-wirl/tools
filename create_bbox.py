@@ -42,8 +42,8 @@ def create_bbox_kml(file_path:Union[str,os.PathLike],
 
     if out_type == 'shapefile':
         if not os.path.exists(os.path.join(os.path.dirname(file_path) + 'shp')):
-            os.mkdir(os.path.join(os.path.dirname(file_path) + 'shp'))
-        outpath = os.path.join(os.path.dirname(file_path) + 'shp', os.path.basename(file_path).split('.')[0])
+            os.mkdir(os.path.join(os.path.dirname(file_path), 'shp'))
+        outpath = os.path.join(os.path.dirname(file_path), 'shp', os.path.basename(file_path).split('.')[0])
     else:
         outpath = os.path.join(os.path.dirname(file_path), os.path.basename(file_path).split('.')[0])
 
