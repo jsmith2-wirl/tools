@@ -58,7 +58,7 @@ def create_bbox_kml(file_path:Union[str,os.PathLike],
     elif out_type == 'geojson':
         bbox_gdf.to_file(outpath + '_bbox.geojson', driver='GeoJSON', crs=out_crs) 
 
-def zip_shapefiles(file_path:Union[str,os.PathLike]):
+def zip_shapefiles(file_path:Union[str,os.PathLike], delete_dir:bool=False):
     '''Zip shapefiles in the same directory as the input file.
 
     input:
@@ -78,5 +78,9 @@ def zip_shapefiles(file_path:Union[str,os.PathLike]):
                 if name.endswith(ext):
                     shp_list.append(name)
                     zipMe.write(os.path.join(path, name), compress_type=zipfile.ZIP_DEFLATED)
+    
+    if delete_dir == True:
+        os.removedirs(path)
+    
 
     
