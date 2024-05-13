@@ -1,5 +1,6 @@
 import os
 import zipfile
+import shutil
 import geopandas as gpd
 from typing import Union     
 from shapely.geometry import box
@@ -41,7 +42,7 @@ def create_bbox_kml(file_path:Union[str,os.PathLike],
     bbox_gdf = gpd.GeoDataFrame(gpd.GeoSeries(bbox), columns=['geometry'])
 
     if out_type == 'shapefile':
-        if not os.path.exists(os.path.join(os.path.dirname(file_path) + 'shp')):
+        if not os.path.exists(os.path.join(os.path.dirname(file_path), 'shp')):
             os.mkdir(os.path.join(os.path.dirname(file_path), 'shp'))
         outpath = os.path.join(os.path.dirname(file_path), 'shp', os.path.basename(file_path).split('.')[0])
     else:
@@ -80,7 +81,7 @@ def zip_shapefiles(file_path:Union[str,os.PathLike], delete_dir:bool=False):
                     zipMe.write(os.path.join(path, name), compress_type=zipfile.ZIP_DEFLATED)
     
     if delete_dir == True:
-        os.removedirs(path)
+        shutil.rmtree(path)
     
 
     
