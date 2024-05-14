@@ -1,8 +1,11 @@
 import os
 import zipfile
 import shutil
+import numpy as np
+import xarray as xr
+import rioxarray as rxr
 import geopandas as gpd
-from typing import Union     
+from typing import Union 
 from shapely.geometry import box
 
 def create_bbox_kml(file_path:Union[str,os.PathLike], 
@@ -83,5 +86,40 @@ def zip_shapefiles(file_path:Union[str,os.PathLike], delete_dir:bool=False):
     if delete_dir == True:
         shutil.rmtree(path)
     
+import os
+from typing import Union
+import numpy as np
+import xarray as xr
+import rioxarray as rxr
+
+def make_a_raster(path:Union[str, os.PathLike], 
+                  res:float, 
+                  left:float, 
+                  bottom:float, 
+                  right:float, 
+                  top:float,
+                  crs:str = '4326') -> xr.Dataset:
+    '''Makes an empty raster given bounding box extents.
+
+    inputs:
+    res: resolution of the raster
+    left: left extent of the raster
+    bottom: bottom extent of the raster
+    right: right extent of the raster
+    top: top extent of the raster
+    path: path to save the raster
+
+    returns:
+    da: xarray dataset with the raster
+    '''
+
+    x = np.arange(left, right, res) 
+    y = np.arange(bottom, top, res) 
+    y = y[::-1]
+
+    X, _ = np.meshgrid(x, y)
+    da = xr.DataArray(X, coords={"y":y, "x":x}, dims=['y', 'x'])
+    da.rio.write_crs(crs, inplace=True)
+    da.rio.to_raster(path)
 
     
