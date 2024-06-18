@@ -86,12 +86,6 @@ def zip_shapefiles(file_path:Union[str,os.PathLike], delete_dir:bool=False):
     if delete_dir == True:
         shutil.rmtree(path)
     
-import os
-from typing import Union
-import numpy as np
-import xarray as xr
-import rioxarray as rxr
-
 def make_a_raster(path:Union[str, os.PathLike], 
                   res:float, 
                   left:float, 
@@ -121,3 +115,63 @@ def make_a_raster(path:Union[str, os.PathLike],
     da = xr.DataArray(X, coords={"y":y, "x":x}, dims=['y', 'x'])
     da.rio.write_crs(crs, inplace=True)
     da.rio.to_raster(path)
+
+def get_centroid(path:Union[os.PathLike, str], 
+                 file_type:str):
+    '''Get the centroid of a shapefile or kml file.
+
+    inputs:
+        path: str, path to the file
+        file_type: str, type of file: 'shp', 'geojson', or 'kml'
+    returns:
+        centroid: tuple, centroid of the file
+    '''
+    
+    if file_type == 'kml':
+		
+        file_type = 'LIBKML'
+        try:
+            df = gpd.read_file(path, driver=file_type)
+        except:
+            gpd.io.file.fiona.drvsupport.supported_drivers['LIBKML'] = 'rw'
+            df = gpd.read_file(path, driver=file_type)
+    else:
+        df = gpd.read_file(path, driver=file_type)
+	
+    centroid = df['geometry'].centroid
+    centroid = (centroid.x.item(), centroid.y.item())
+    return centroid
+
+def nearest_species(
+        detections: gpd.GeoDataFrame, 
+        field: gpd.GeoDataFrame
+    ):
+    '''Match attribute (species) in a point layer with nearest field measurement.
+
+    inputs:
+        detections: (geopandas.GeoDataFrame) point layer with species attribute
+        field: (geopandas.GeoDataFrame) point layer with field measurements
+    returns:
+        detections_spp: (geopandas.GeoDataFrame) point layer with nearest field measurement (species)
+    '''
+
+    detections_spp = gpd.GeoDataFrame()
+    field_alt = field.copy()
+
+    for index, _ in detections.iterrows():
+
+        df = gpd.GeoDataFrame(detections.iloc[index:index+1])
+        joined = gpd.sjoin_nearest(df, field_alt)
+
+        #remove the joined row from the field df
+        field_alt = field_alt[~field_alt.index.isin(joined['index_right'])]
+        detections_spp = pd.concat([detections_spp, joined])
+
+        if len(field_alt) == 0:
+            break
+                
+    leftovers = detections.iloc[index+1:]
+    leftover_species = gpd.sjoin_nearest(leftovers, field)
+    detections_spp = pd.concat([detections_spp, leftover_species])
+
+    return detections_spp
